@@ -76,7 +76,7 @@ class PerceptionModel:
     def check(self, inputs):
         products = np.multiply(self.weights, inputs)
         total = np.sum(products)
-        result = total > self.threshold
+        result = total >= self.threshold
         if result:
             return 1
         return 0
