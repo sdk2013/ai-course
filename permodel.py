@@ -12,7 +12,7 @@ class PerceptionModel:
         for w in weights:
             self.weights.append(Decimal(str(w)))
 
-        self.threshold = threshold
+        self.threshold = Decimal(str(threshold))
         self.trained = False
         self.debug = debug
 
@@ -36,17 +36,12 @@ class PerceptionModel:
 
     def train(self, max_iterations=0):
         if self.debug:
-            print(f"{'epoch':<10} {'Old Weights':<20} {'New Weights':<30}")
-
+            print(f"{'epoch':<7} {'Inputs':<20} {'Result':<10} {'Target':<10} {'Old Weights':<40} {'New Weights':<40}")
         done = False
         iteration = 0
         while not done:
-            old_weights = self.get_weights()
             iteration += 1
-            done = self.epoch()
-            new_weights = self.get_weights()
-            if not done and self.debug:
-                print(f"{iteration:<10} {old_weights:<20} {new_weights:<30}")
+            done = self.epoch(iteration)
             if max_iterations != 0 and iteration >= max_iterations:
                 break
 
@@ -56,9 +51,11 @@ class PerceptionModel:
         if self.debug:
             print("Final Weights: " + str(self.get_weights()))
 
-    def epoch(self):
+    def epoch(self, iteration):
         done = True
         for attributes in self.input_sets:
+            if self.debug:
+                old_weights = self.get_weights()
 
             result = self.check(attributes)
             target = self.target_func(attributes)
@@ -66,9 +63,16 @@ class PerceptionModel:
             if target != result:
                 done = False
 
+            a = []
             for i in range(len(attributes)):
                 adj_weight = self.weights[i] + self.learning_coefficient * Decimal(str(target - result)) * attributes[i]
                 self.weights[i] = adj_weight
+                a.append(str(attributes[i]))
+
+            if self.debug:
+                new_weights = self.get_weights()
+            if self.debug:
+                print(f"{iteration:<7} {str(a):<20} {result:<10} {target:<10} {old_weights:<40} {new_weights:<50}")
 
         return done
 
@@ -76,7 +80,7 @@ class PerceptionModel:
     def check(self, inputs):
         products = np.multiply(self.weights, inputs)
         total = np.sum(products)
-        result = total >= self.threshold
+        result = (Decimal(str(total)) >= self.threshold)
         if result:
             return 1
         return 0
