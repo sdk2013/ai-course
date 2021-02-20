@@ -1,11 +1,6 @@
 from numpy import random
 import inputsets
 import math
-import time
-
-
-def sigmoid(x):
-    return 1 / (1 + math.exp(-x))
 
 
 def id_gen():
@@ -19,7 +14,7 @@ ids = id_gen()
 
 
 class Node:
-    def __init__(self, output_func=sigmoid):
+    def __init__(self, output_func):
         self.output_func = output_func
         self.value = 0
         self.links_in = []
@@ -38,8 +33,7 @@ class Node:
 
 class InputNode(Node):
     def __init__(self):
-        super().__init__()
-        self.output_func = lambda x: float(x)
+        super().__init__(lambda x: float(x))
         self.links_in = []
         self.links_out = []
 
@@ -96,7 +90,7 @@ class Link:
 
     def update_weight(self):
         out_delta = self.node_out.delta
-        prev_out = self.node_out.get_output()
+        prev_out = self.node_in.get_output()
         new_weight = self.weight + self.learn_rate * out_delta * prev_out
         self.weight = new_weight
 
@@ -105,7 +99,11 @@ class Link:
 
 
 class Network:
-    def __init__(self, layers, learn_rate, variance, output_func=sigmoid):
+    def __init__(self, layers, learn_rate, variance, output_func=None):
+        if output_func is None:
+            def sigmoid(x):
+                return 1 / (1 + math.exp(-x))
+            output_func = sigmoid
         self.variance = variance
         self.layers = []
         self.links = []
@@ -190,22 +188,3 @@ class Network:
     def train(self, target_output_func):
         while not self.cycle(target_output_func):
             pass
-
-
-layer_sizes = [3, 6, 1]
-learning_coefficient = .45
-acceptable_variance = 0.1
-model = Network(layer_sizes, learning_coefficient, acceptable_variance, sigmoid)
-
-
-def target_function(inputs):
-    [a, b, c] = inputs
-    if (a == 1 and b == 0) or (a == 0 and b == 1):
-        return [1]
-    return [0]
-
-
-start = time.time()
-model.train(target_function)
-end = time.time()
-print("Model trained in " + str(end - start) + " seconds")
